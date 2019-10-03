@@ -1,0 +1,67 @@
+"""
+Created on Sun Sep 29 12:25:32 2019
+
+@author: jackr
+"""
+
+
+from tkinter import *
+from PIL import ImageTk, Image
+from tkinter import filedialog 
+import os
+
+root = Tk()
+root.title("Image Viewer")
+root.geometry("600x600")
+root.resizable(width=True, height=True)
+
+SCREEN_W = root.winfo_screenwidth()
+SCREEN_H = root.winfo_screenheight()
+WIDTH, HEIGHT = 600, 600
+
+class widgets :
+	myImage = None
+	label = None
+	
+def close_window(): 
+    root.destroy()
+    
+def openfile():
+	C = filedialog.askopenfilename(parent=root, initialdir = "/",title = "Select Image",filetypes = (("jpeg files","*.jpg"),("all files","*.*")))
+    #-------OPENS SELECTED FILE FROM FILEBROWSER------#
+	widgets.myImage = Image.open(C)
+    #-------SETS MYIMAGE EQUAL TO THE IMAGE OPENED IN THE FILEDIALOG------#
+	img2 = widgets.myImage.copy()
+    #-------CREATES A COPY OF THE SELECTED IMAGE AND SETS IT EQUAL TO img2-------#
+	img = ImageTk.PhotoImage(img2)
+	widgets.label = Label(root, image=img)
+	widgets.label.image = img
+	widgets.label.pack(fill=BOTH, expand = YES)
+   
+def resize_image(event):
+	if widgets.label is not None and widgets.myImage is not None :
+		img2 = widgets.myImage.copy()
+		img2 = img2.resize((event.width, event.height))
+		img = ImageTk.PhotoImage(img2)
+		widgets.label.configure(image=img)
+		widgets.label.image = img
+
+
+	
+root.bind( "<Configure>", resize_image )
+
+
+menu = Menu(root) #The name of the Menu is menu, located in root#
+root.config(menu=menu) #Telling tkinter that our menu is a menu#
+
+subMenu = Menu(menu) #The dropdown menu is named subMenu, located in the menu#
+menu.add_cascade(label="File", menu=subMenu) #Adds dropdown functionality to the "File" subMenu#
+subMenu.add_command(label="Open", command=openfile) #Adds the Open option in the file dropdown menu#
+subMenu.add_separator() #Adds a seperator between File Open and Exit options#
+subMenu.add_command(label="Exit", command=close_window) #Adds the Exit option in the file dropdown menu#
+
+helpMenu = Menu(menu)
+menu.add_cascade(label="Help", menu=helpMenu)
+helpMenu.add_command(label="About")
+
+root.mainloop()
