@@ -1,0 +1,249 @@
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+    
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
+
+import tkinter as tk
+from tkinter import ttk, filedialog
+
+import pandas as pd
+import numpy as np
+
+from PIL import ImageTk, Image
+
+import sys
+import os
+
+
+
+
+    
+class GeoViewerapp(tk.Tk):
+    
+    def __init__(self, *args, **kwargs):
+        
+        tk.Tk.__init__(self, *args, **kwargs)
+        tk.Tk.title(self,'GeoViewer (Version 1.0)')
+        tk.Tk.state(self,'zoomed')
+        
+        #toolbar
+        toolbar = tk.Frame(self, height=50, relief='raised', borderwidth=2)
+        toolbar.pack(side='top', fill='x')
+        #sidebar
+        sidebar = tk.Frame(self, width=300, bg='white', height=500, relief='sunken', borderwidth=3)
+        sidebar.pack(side='left', fill='y')
+        sidebar.grid_rowconfigure(0, weight=1)
+        sidebar.grid_columnconfigure(0, weight=1)
+        #working window
+        container = tk.Frame(self, bg='blue', relief='sunken')
+        container.pack(side='right', fill='both', expand=True)
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
+        
+        #filemenu
+        menubar = tk.Menu(container)
+        filemenu = tk.Menu(menubar, tearoff=0)
+        filemenu.add_command(label='New Project', command=lambda: self.show_frame(PageOne))
+        filemenu.add_separator()
+        filemenu.add_command(label='Save', command =popupmsg)
+        filemenu.add_command(label='Save as', command =lambda: popupmsg('not supported just yet'))
+        filemenu.add_command(label='Save as Template', command =lambda: popupmsg('not supported just yet'))
+        filemenu.add_separator()
+        filemenu.add_command(label='Exit', command=Exit)
+        menubar.add_cascade(label='File', menu=filemenu)
+        
+        #projectmenu
+        ProjectMenu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Project", menu=ProjectMenu)
+        ProjectMenu.add_command(label="View Project")
+        
+        #datamenu
+        DataMenu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Data", menu=DataMenu)
+        DataMenu.add_command(label="View Data", command=lambda: self.show_frame(PageTwo))
+        DataMenu.add_command(label="View Plots", command=lambda: self.show_frame(PageThree))
+        DataMenu.add_separator()
+        DataMenu.add_command(label="Add Instrument")
+        
+        #helpmenu
+        helpMenu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Help", menu=helpMenu)
+        helpMenu.add_command(label="About")
+        
+        
+        
+        tk.Tk.config(self, menu=menubar)
+            
+        self.frames = {}
+        
+        for F in (StartPage, PageOne, PageTwo, PageThree): 
+            
+            frame = F(container,self)
+        
+            self.frames[F] = frame
+        
+            frame.grid(row=0, column=0, sticky="nsew")
+        
+        self.show_frame(StartPage)
+        
+    def show_frame(self, cont):
+        
+        frame = self.frames[cont]
+        frame.tkraise()
+    
+class StartPage(tk.Frame):
+    
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self,parent, bg='white', bd=3, padx=15,pady=15, relief='sunken')
+        Label = tk.Label(self, text="StartPage")
+        Label.pack(padx=10,pady=10)
+        
+        button1 = ttk.Button(self, text="Visit Page 1", 
+                            command=lambda: controller.show_frame(PageOne))
+        button1.pack()
+        
+        button2 = ttk.Button(self, text="Visit Page 2", 
+                            command=lambda: controller.show_frame(PageTwo))
+        button2.pack()
+        
+        button3 = ttk.Button(self, text="Visit Page 3", 
+                            command=lambda: controller.show_frame(PageThree))
+        button3.pack()
+
+class PageOne(tk.Frame):
+ #project page   
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self,parent, bg='white', bd=3, padx=15,pady=15, relief='sunken')
+        Label = tk.Label(self, text="Project Page")
+        Label.pack(padx=10,pady=10)
+        
+        button1 = ttk.Button(self, text="Back to Home", 
+                            command=lambda: controller.show_frame(StartPage))
+        button1.pack()
+        
+        button2 = ttk.Button(self, text="Visit Page 2", 
+                            command=lambda: controller.show_frame(PageTwo))
+        button2.pack()
+
+class PageTwo(tk.Frame):
+#data page    
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self,parent, bg='white', bd=3, padx=15,pady=15, relief='sunken')
+        Label = tk.Label(self, text="DataPage")
+        Label.pack(padx=10,pady=10)
+        
+        button1 = ttk.Button(self, text="Back to Home", 
+                            command=lambda: controller.show_frame(StartPage))
+        button1.pack()
+        
+        button2 = ttk.Button(self, text="Visit Page 1", 
+                            command=lambda: controller.show_frame(PageOne))
+        button2.pack()
+
+class PageThree(tk.Frame):
+#figures page    
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self,parent, bg='white', bd=3, relief='sunken')
+        topbar = tk.Frame(self, bg='white', height=50)
+        topbar.pack(side='top', fill='x', pady=20)
+        
+        topbar3 = tk.Frame(self, bg='white', height=50)
+        topbar3.pack(side='top', fill='x', pady=0, padx=160)
+        
+        button1 = ttk.Button(topbar3, text="Select Instrument 1", 
+                            command=plotdata1)
+        button1.pack(side='left', anchor='center', padx=91)
+        
+        button2 = ttk.Button(topbar3, text="Select Instrument 2", 
+                            command=lambda: controller.show_frame(StartPage))
+        button2.pack(side='left', anchor='center', padx=91)
+        
+        button3 = ttk.Button(topbar3, text="Select Instrument 3", 
+                            command=lambda: controller.show_frame(StartPage))
+        button3.pack(side='left', anchor='center', padx=91)
+        
+        button4 = ttk.Button(topbar3, text="Select Instrument 4", 
+                            command=lambda: controller.show_frame(StartPage))
+        button4.pack(side='left', anchor='center', padx=91)
+        
+        topbar2 = tk.Frame(self, bg='white', height=50)
+        topbar2.pack(side='top', fill='x', pady=0, padx=160)
+        
+        
+        button1 = ttk.Button(topbar2, text="Select Data1", 
+                            command=selectdata1)
+        button1.pack(side='left', anchor='center', padx=110)
+        
+        button2 = ttk.Button(topbar2, text="Select Data2", 
+                            command=selectdata1)
+        button2.pack(side='left', anchor='center', padx=110)
+        
+        button3 = ttk.Button(topbar2, text="Select Data3", 
+                            command=selectdata1)
+        button3.pack(side='left', anchor='center', padx=110)
+        
+        button4 = ttk.Button(topbar2, text="Select Data4", 
+                            command=selectdata1)
+        button4.pack(side='left', anchor='center', padx=110)
+        
+        button5 = ttk.Button(topbar, text="Select Interval", 
+                            command=lambda: controller.show_frame(StartPage))
+        button5.pack(side='top', anchor='n')
+        
+        f = Figure(figsize=(5,5), dpi= 80)
+        f.suptitle('Project Data Display', fontsize=20)
+        a = f.add_subplot(2,2,1)
+        b = f.add_subplot(2,2,2)
+        c = f.add_subplot(2,2,3)
+        d = f.add_subplot(2,2,4)
+        
+        a.title.set_text('Instrument1')
+        b.title.set_text('Instrument2')
+        c.title.set_text('Instrument3')
+        d.title.set_text('Instrument4')
+        #a.plot([1,2,3,4,5,6,7,8],[1,5,7,3,5,8,6,7])
+        aData = pd.read_excel('Slope_Movement_SSR.xlsx', sheet_name='Sheet1')
+        vDeformation  = aData['Deformation']
+        vDates        = aData['Time']
+        
+        #a.plot(vDates,vDeformation)
+        b.plot(vDates,vDeformation)
+        c.plot(vDates,vDeformation)
+        d.plot(vDates,vDeformation)
+        
+        canvas = FigureCanvasTkAgg(f, self)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side='bottom', pady=20, expand=True, fill='both', anchor='s')
+
+def selectdata1(): 
+    C = filedialog.askopenfilename(initialdir = "/",title = "Select Data",filetypes = (("Excel files","*.xlsx"),("all files","*.*")))
+    df = pd.read_excel(C, sheet_name='Sheet1')  
+    vDates = df['Time']
+    vPPVX  = df['PPVX']
+    
+def plotdata1():
+    vDates = df['Time']
+    vPPVX  = df['PPVX']
+    a.plot(vDates,vPPVX)
+    
+
+def popupmsg():
+    popup = tk.Toplevel()
+    popup.wm_title("!")
+    label = ttk.Label(popup, text="msg")
+    label.pack(side="top", fill="x", pady=10)
+    B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
+    B1.pack()
+    popup.mainloop()
+    
+def Exit():
+    app.destroy()
+    
+
+ 
+app = GeoViewerapp()
+app.configure(background='brown1')
+app.iconbitmap(r'icon.ico')
+app.mainloop()
